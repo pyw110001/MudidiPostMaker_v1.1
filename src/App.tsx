@@ -4,6 +4,12 @@ import { Preview } from './components/Preview';
 import { generatePoster } from './services/gemini';
 import { motion } from 'motion/react';
 
+export interface HistoryItem {
+  id: string;
+  url: string;
+  timestamp: number;
+}
+
 declare global {
   interface Window {
     aistudio?: {
@@ -28,6 +34,7 @@ export default function App() {
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [promptPreview, setPromptPreview] = useState('');
 
@@ -93,6 +100,13 @@ export default function App() {
         referenceImage?.mime
       );
       setGeneratedImage(result);
+      
+      const newItem: HistoryItem = {
+        id: Date.now().toString(),
+        url: result,
+        timestamp: Date.now()
+      };
+      setHistory(prev => [newItem, ...prev]);
     } catch (err: any) {
       const errMsg = err.message || '生成图片失败，请重试。(Failed to generate image. Please try again.)';
       setError(errMsg);
@@ -141,7 +155,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0c] text-white font-sans overflow-hidden">
+    <div className="flex flex-col-reverse lg:flex-row h-[100dvh] w-full bg-[#0a0a0c] text-white font-sans overflow-hidden">
       <Sidebar 
         referenceImage={referenceImage}
         setReferenceImage={setReferenceImage}
@@ -168,6 +182,8 @@ export default function App() {
         generatedImage={generatedImage}
         error={error}
         ratio={ratio}
+        history={history}
+        onSelectHistory={setGeneratedImage}
       />
     </div>
   );

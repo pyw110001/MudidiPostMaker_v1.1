@@ -53,19 +53,19 @@ export function Sidebar({
   };
 
   return (
-    <div className="w-[380px] h-full flex flex-col bg-[#121214]/80 backdrop-blur-3xl border-r border-white/5 z-10">
+    <div className="w-full lg:w-[380px] flex-1 lg:flex-none h-auto lg:h-full flex flex-col min-h-0 bg-[#121214]/80 backdrop-blur-3xl border-t lg:border-t-0 lg:border-r border-white/5 z-10">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-          <Wand2 className="w-4 h-4 text-white" />
+      <div className="px-5 py-4 lg:px-6 lg:py-5 border-b border-white/5 flex items-center gap-3 shrink-0">
+        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <Wand2 className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold tracking-wide text-white">MUDIDI POSTER ARCHITECT</h2>
+          <h2 className="text-xs lg:text-sm font-semibold tracking-wide text-white">MUDIDI POSTER ARCHITECT</h2>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-6 lg:space-y-8 custom-scrollbar">
         
         {/* Reference Image */}
         <section>
@@ -191,7 +191,7 @@ export function Sidebar({
       </div>
 
       {/* Footer / Generate Button */}
-      <div className="p-6 border-t border-white/5 bg-[#121214]/90 backdrop-blur-xl">
+      <div className="p-4 lg:p-6 border-t border-white/5 bg-[#121214]/90 backdrop-blur-xl shrink-0 pb-safe">
         <button
           onClick={onGenerate}
           disabled={isGenerating}
