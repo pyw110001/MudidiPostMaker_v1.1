@@ -6,6 +6,8 @@ interface SidebarProps {
   setReferenceImage: (img: {data: string, mime: string} | null) => void;
   quantity: string;
   setQuantity: (val: string) => void;
+  emotion: string;
+  setEmotion: (val: string) => void;
   season: string;
   setSeason: (val: string) => void;
   holiday: string;
@@ -24,6 +26,7 @@ interface SidebarProps {
 export function Sidebar({
   referenceImage, setReferenceImage,
   quantity, setQuantity,
+  emotion, setEmotion,
   season, setSeason,
   holiday, setHoliday,
   action, setAction,
@@ -96,14 +99,23 @@ export function Sidebar({
         </section>
 
         {/* Selectors */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">数量 (Quantity)</label>
             <select 
               value={quantity} onChange={(e) => setQuantity(e.target.value)}
               className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-zinc-200 appearance-none outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
             >
-              {[1,2,3,4,5,6].map(n => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
+              {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n} className="bg-zinc-900">{n}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">表情 (Emotion)</label>
+            <select 
+              value={emotion} onChange={(e) => setEmotion(e.target.value)}
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-zinc-200 appearance-none outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+            >
+              {['无 (None)', 'OK', 'emo', '今天超棒', '你好', '再见', '冻skr人', '吃瓜', '哈哈哈', '嗯嗯', '囧', '大哭', '天命牛马', '尴尬', '带我飞', '干杯', '我来了', '打你', '抱抱', '拒绝', '拜佛', '搞定', '收到', '晚安', '暗中观察', '来玩呀', '比心', '沉迷学习', '热死人', '生日快乐', '生气', '祝你好运', '耶', '苹安', '谢谢', '财源滚滚', '赞', '走起', '辛苦了', '问号', '震惊', '马到成功'].map(s => <option key={s} value={s} className="bg-zinc-900">{s}</option>)}
             </select>
           </div>
           <div>

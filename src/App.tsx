@@ -19,6 +19,7 @@ export default function App() {
 
   const [referenceImage, setReferenceImage] = useState<{data: string, mime: string} | null>(null);
   const [quantity, setQuantity] = useState('4');
+  const [emotion, setEmotion] = useState('无 (None)');
   const [season, setSeason] = useState('夏 (Summer)');
   const [holiday, setHoliday] = useState('无 (None)');
   const [action, setAction] = useState('围坐在绿色圆桌旁吃点心 (eating dim sum at a round green table)');
@@ -59,7 +60,15 @@ export default function App() {
   useEffect(() => {
     const baseStyle = "A warm, textured, flat-vector illustration style with a grainy, crayon or pastel artistic feel. Warm color palette with soft lighting. Naive art, children's book illustration style. Apple-style clean composition.";
     const characters = `${quantity} cute anthropomorphic sheep characters. CRITICAL ANATOMY INSTRUCTION: ABSOLUTELY NO HUMAN SKIN/FLESH COLORS. Follow this EXACT color blocking:\n1. Head: White, fluffy, cloud-like with simple dot eyes and a small mouth.\n2. Torso: MUST wear colorful clothes (if swimming, they must wear full-body swimsuits or shirts). NO bare chests, NO bare bellies, NO flesh-colored bodies.\n3. Arms: Extremely thin WHITE stick-like lines ONLY. NO flesh-colored arms.\n4. Legs: Extremely thin BLACK stick-like lines ONLY. NO flesh-colored legs.\nDo not draw realistic animal bodies or thick limbs.`;
-    const setting = `Scene: ${scene}.`;
+    
+    // Emotion constraints
+    const charEmotion = !emotion.includes('无') 
+      ? `Character Emotion: ${emotion}. The characters MUST strongly display this overall emotion on their faces. CRITICAL RESTRICTION: The exact same facial expression MUST NOT appear more than twice in the entire image. If there are multiple characters, vary their expressions and reactions slightly while maintaining the overall emotion.` 
+      : '';
+
+    // Scene & Background strong sizing constraints
+    const setting = `Scene: ${scene}. VERY IMPORTANT BACKGROUND INSTRUCTION: Background elements (especially flowers, plants, and natural decorations) MUST be realistically proportioned relative to the characters. ABSOLUTELY NO oversized, giant, distorted, or overwhelmingly large floral elements. Keep background elements at a normal, supporting scale.`;
+    
     const activity = `Action: ${action}.`;
     const time = !season.includes('无') ? `Season: ${season}.` : '';
     const festivity = !holiday.includes('无') ? `Holiday elements: ${holiday}.` : '';
@@ -68,8 +77,8 @@ export default function App() {
       ? "EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design: white fluffy head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. You MUST keep this exact style. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep." 
       : "";
     
-    setPromptPreview([baseStyle, characters, setting, activity, time, festivity, referenceInstruction].filter(Boolean).join('\n\n'));
-  }, [quantity, season, holiday, action, scene, referenceImage]);
+    setPromptPreview([baseStyle, characters, charEmotion, setting, activity, time, festivity, referenceInstruction].filter(Boolean).join('\n\n'));
+  }, [quantity, emotion, season, holiday, action, scene, referenceImage]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -138,6 +147,8 @@ export default function App() {
         setReferenceImage={setReferenceImage}
         quantity={quantity}
         setQuantity={setQuantity}
+        emotion={emotion}
+        setEmotion={setEmotion}
         season={season}
         setSeason={setSeason}
         holiday={holiday}
