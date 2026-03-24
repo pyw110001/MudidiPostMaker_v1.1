@@ -65,8 +65,8 @@ export default function App() {
 
   // Update prompt preview whenever inputs change
   useEffect(() => {
-    const baseStyle = "A warm, textured, flat-vector illustration style with a grainy, crayon or pastel artistic feel. Warm color palette with soft lighting. Naive art, children's book illustration style. Apple-style clean composition.";
-    const characters = `${quantity} cute anthropomorphic sheep characters. CRITICAL ANATOMY INSTRUCTION: ABSOLUTELY NO HUMAN SKIN/FLESH COLORS. Follow this EXACT color blocking:\n1. Head: White, fluffy, cloud-like with simple dot eyes and a small mouth.\n2. Torso: MUST wear colorful clothes (if swimming, they must wear full-body swimsuits or shirts). NO bare chests, NO bare bellies, NO flesh-colored bodies.\n3. Arms: Extremely thin WHITE stick-like lines ONLY. NO flesh-colored arms.\n4. Legs: Extremely thin BLACK stick-like lines ONLY. NO flesh-colored legs.\nDo not draw realistic animal bodies or thick limbs.`;
+    const baseStyle = "A warm, textured, flat-vector illustration style with a grainy, crayon or pastel artistic feel. Warm color palette with soft lighting. Naive art, children's book illustration style. Apple-style clean composition. CRITICAL: ABSOLUTELY NO TEXT, NO TITLES, NO WORDS, NO LETTERS, AND NO WATERMARKS IN THE GENERATED IMAGE.";
+    const characters = `${quantity} cute anthropomorphic sheep characters. CRITICAL ANATOMY INSTRUCTION: ABSOLUTELY NO HUMAN SKIN/FLESH COLORS. Maintain rigorous consistency in character design; DO NOT deform or mutate the overall shape of the sheep. Follow this EXACT color blocking:\n1. Head: White, fluffy, perfectly consistent cloud-like circle with simple dot eyes and a small mouth.\n2. Torso: MUST wear clothes that STRICTLY MATCH the current Action and Scene (e.g., if swimming, ALL characters MUST wear proper swimwear like swimsuits or rash guards; if winter, winter coats). ALL characters must be dressed appropriately for the context and environment! NO bare chests, NO bare bellies, NO flesh-colored bodies.\n3. Arms: Extremely thin WHITE stick-like lines ONLY. NO flesh-colored arms.\n4. Legs: Extremely thin BLACK stick-like lines ONLY. NO flesh-colored legs.\nDo not draw realistic animal bodies or thick limbs.`;
     
     // Emotion constraints
     const charEmotion = !emotion.includes('无') 
@@ -81,7 +81,7 @@ export default function App() {
     const festivity = !holiday.includes('无') ? `Holiday elements: ${holiday}.` : '';
     
     const referenceInstruction = referenceImage 
-      ? "EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design: white fluffy head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. You MUST keep this exact style. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep." 
+      ? "EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design and rigid body proportions: white fluffy perfectly rounded head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. The overall shape and outline of the sheep MUST NOT deform and MUST be identical to the reference. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep." 
       : "";
     
     setPromptPreview([baseStyle, characters, charEmotion, setting, activity, time, festivity, referenceInstruction].filter(Boolean).join('\n\n'));
