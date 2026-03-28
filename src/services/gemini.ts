@@ -1,13 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
 
+async function resolveApiKey(): Promise<string> {
+  if (typeof window !== "undefined" && window.mudidiElectron?.getApiKey) {
+    const k = await window.mudidiElectron.getApiKey();
+    if (k?.trim()) return k.trim();
+  }
+  return (process.env.API_KEY || process.env.GEMINI_API_KEY || "").trim();
+}
+
 export async function generatePoster(
   prompt: string,
   ratio: string,
   referenceImageBase64?: string,
   mimeType?: string
 ) {
-  // Create a new instance right before making the call to ensure it uses the latest key
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+  const apiKey = await resolveApiKey();
+  if (!apiKey) {
+    throw new Error(
+      "缺少 API Key。请在桌面版首次启动时填写，或在 .env 中配置 GEMINI_API_KEY。"
+    );
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
   const parts: any[] = [];
   

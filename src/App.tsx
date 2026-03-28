@@ -28,6 +28,9 @@ export default function App() {
   const [isCheckingKey, setIsCheckingKey] = useState(true);
   const [hasKey, setHasKey] = useState(false);
   const [isAiStudio, setIsAiStudio] = useState(false);
+  const [isElectronApp, setIsElectronApp] = useState(false);
+  const [pendingApiKey, setPendingApiKey] = useState('');
+  const [electronKeyError, setElectronKeyError] = useState<string | null>(null);
 
   const [referenceImage, setReferenceImage] = useState<{data: string, mime: string} | null>(null);
   const [quantity, setQuantity] = useState('4');
@@ -48,6 +51,7 @@ export default function App() {
     const checkKey = async () => {
       if (window.aistudio) {
         setIsAiStudio(true);
+        setIsElectronApp(false);
         try {
           const has = await window.aistudio.hasSelectedApiKey();
           setHasKey(has);
@@ -55,8 +59,19 @@ export default function App() {
           console.error("Error checking API key:", e);
           setHasKey(true);
         }
+      } else if (window.mudidiElectron) {
+        setIsAiStudio(false);
+        setIsElectronApp(true);
+        try {
+          const k = await window.mudidiElectron.getApiKey();
+          setHasKey(k.trim().length > 0);
+        } catch (e) {
+          console.error("Error reading stored API key:", e);
+          setHasKey(false);
+        }
       } else {
         setIsAiStudio(false);
+        setIsElectronApp(false);
         setHasKey(hasConfiguredGeminiKey());
       }
       setIsCheckingKey(false);
@@ -68,6 +83,23 @@ export default function App() {
     if (window.aistudio) {
       await window.aistudio.openSelectKey();
       setHasKey(true);
+    }
+  };
+
+  const handleSaveElectronApiKey = async () => {
+    setElectronKeyError(null);
+    const key = pendingApiKey.trim();
+    if (!key) {
+      setElectronKeyError('请输入 API Key。');
+      return;
+    }
+    try {
+      await window.mudidiElectron!.setApiKey(key);
+      setHasKey(true);
+      setPendingApiKey('');
+    } catch (e) {
+      console.error(e);
+      setElectronKeyError('保存失败，请重试。');
     }
   };
 
@@ -147,6 +179,11 @@ export default function App() {
             <br/><br/>
             {isAiStudio ? (
               <>请选择您的 API Key 以继续。</>
+            ) : isElectronApp ? (
+              <>
+                桌面版首次使用请输入 <strong className="text-zinc-200">Nano Banana 2 / Gemini</strong> 图像生成 API Key（与
+                Google AI Studio / Gemini API 相同）。密钥将保存在本机用户目录，之后打开无需再次输入。
+              </>
             ) : (
               <>
                 本地运行：在项目根目录的 <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">.env</code> 文件中设置{" "}
@@ -172,6 +209,31 @@ export default function App() {
             >
               选择 API Key (Select API Key)
             </button>
+          ) : isElectronApp ? (
+            <div className="space-y-4 text-left">
+              <label className="block text-xs text-zinc-500 uppercase tracking-wide">API Key</label>
+              <input
+                type="password"
+                autoComplete="off"
+                value={pendingApiKey}
+                onChange={(e) => setPendingApiKey(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleSaveElectronApiKey();
+                }}
+                placeholder="粘贴 Nano Banana 2 / Gemini API Key"
+                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/15 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+              />
+              {electronKeyError ? (
+                <p className="text-sm text-red-400">{electronKeyError}</p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void handleSaveElectronApiKey()}
+                className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
+              >
+                保存并进入
+              </button>
+            </div>
           ) : (
             <p className="text-xs text-zinc-500">
               配置完成后若本页未更新，请刷新浏览器。
