@@ -19,9 +19,15 @@ declare global {
   }
 }
 
+function hasConfiguredGeminiKey(): boolean {
+  const k = (process.env.API_KEY || process.env.GEMINI_API_KEY || '').trim();
+  return k.length > 0;
+}
+
 export default function App() {
   const [isCheckingKey, setIsCheckingKey] = useState(true);
   const [hasKey, setHasKey] = useState(false);
+  const [isAiStudio, setIsAiStudio] = useState(false);
 
   const [referenceImage, setReferenceImage] = useState<{data: string, mime: string} | null>(null);
   const [quantity, setQuantity] = useState('4');
@@ -41,6 +47,7 @@ export default function App() {
   useEffect(() => {
     const checkKey = async () => {
       if (window.aistudio) {
+        setIsAiStudio(true);
         try {
           const has = await window.aistudio.hasSelectedApiKey();
           setHasKey(has);
@@ -49,7 +56,8 @@ export default function App() {
           setHasKey(true);
         }
       } else {
-        setHasKey(true);
+        setIsAiStudio(false);
+        setHasKey(hasConfiguredGeminiKey());
       }
       setIsCheckingKey(false);
     };
@@ -137,18 +145,38 @@ export default function App() {
           <p className="text-zinc-400 mb-8 text-sm leading-relaxed">
             此应用使用了高质量的 <strong>Gemini 3.1 Flash Image Preview</strong> 模型，需要配置启用了计费的 Google Cloud API Key。
             <br/><br/>
-            请选择您的 API Key 以继续。
+            {isAiStudio ? (
+              <>请选择您的 API Key 以继续。</>
+            ) : (
+              <>
+                本地运行：在项目根目录的 <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">.env</code> 文件中设置{" "}
+                <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">GEMINI_API_KEY=你的密钥</code>（可参考仓库里的{" "}
+                <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">.env.example</code>
+                ），保存后<strong className="text-zinc-300">重新启动</strong>开发服务器。
+              </>
+            )}
             <br/><br/>
             <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 transition-colors">
               了解有关计费的更多信息 (Learn more about billing)
             </a>
+            {" · "}
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 transition-colors">
+              获取 API Key (Google AI Studio)
+            </a>
           </p>
-          <button
-            onClick={handleSelectKey}
-            className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
-          >
-            选择 API Key (Select API Key)
-          </button>
+          {isAiStudio ? (
+            <button
+              type="button"
+              onClick={handleSelectKey}
+              className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
+            >
+              选择 API Key (Select API Key)
+            </button>
+          ) : (
+            <p className="text-xs text-zinc-500">
+              配置完成后若本页未更新，请刷新浏览器。
+            </p>
+          )}
         </div>
       </div>
     );
