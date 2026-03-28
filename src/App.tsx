@@ -24,6 +24,19 @@ function hasConfiguredGeminiKey(): boolean {
   return k.length > 0;
 }
 
+function isElectronShell(): boolean {
+  return typeof navigator !== 'undefined' && /\bElectron\b/i.test(navigator.userAgent);
+}
+
+/** 主进程 loadFile 时附加，保证桌面版一定走本地密钥流程（避免被判成「仅浏览器」只显示 .env 说明、没有输入框） */
+function isMudidiDesktopFromMain(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).get('mudidi') === 'desktop';
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
   const [isCheckingKey, setIsCheckingKey] = useState(true);
   const [hasKey, setHasKey] = useState(false);
@@ -49,34 +62,45 @@ export default function App() {
 
   useEffect(() => {
     const checkKey = async () => {
-      if (window.aistudio) {
-        setIsAiStudio(true);
-        setIsElectronApp(false);
-        try {
-          const has = await window.aistudio.hasSelectedApiKey();
-          setHasKey(has);
-        } catch (e) {
-          console.error("Error checking API key:", e);
-          setHasKey(true);
+      try {
+        const isDesktopBundle =
+          isMudidiDesktopFromMain() || isElectronShell() || !!window.mudidiElectron;
+
+        if (isDesktopBundle) {
+          setIsAiStudio(false);
+          setIsElectronApp(true);
+          if (window.mudidiElectron) {
+            try {
+              const k = await window.mudidiElectron.getApiKey();
+              setHasKey(k.trim().length > 0);
+            } catch (e) {
+              console.error("Error reading stored API key:", e);
+              setHasKey(false);
+            }
+          } else {
+            console.error("Mudidi Electron: preload bridge missing (mudidiElectron undefined)");
+            setHasKey(false);
+          }
+        } else if (window.aistudio) {
+          setIsAiStudio(true);
+          setIsElectronApp(false);
+          try {
+            const has = await window.aistudio.hasSelectedApiKey();
+            setHasKey(has);
+          } catch (e) {
+            console.error("Error checking API key:", e);
+            setHasKey(true);
+          }
+        } else {
+          setIsAiStudio(false);
+          setIsElectronApp(false);
+          setHasKey(hasConfiguredGeminiKey());
         }
-      } else if (window.mudidiElectron) {
-        setIsAiStudio(false);
-        setIsElectronApp(true);
-        try {
-          const k = await window.mudidiElectron.getApiKey();
-          setHasKey(k.trim().length > 0);
-        } catch (e) {
-          console.error("Error reading stored API key:", e);
-          setHasKey(false);
-        }
-      } else {
-        setIsAiStudio(false);
-        setIsElectronApp(false);
-        setHasKey(hasConfiguredGeminiKey());
+      } finally {
+        setIsCheckingKey(false);
       }
-      setIsCheckingKey(false);
     };
-    checkKey();
+    void checkKey();
   }, []);
 
   const handleSelectKey = async () => {
@@ -93,8 +117,12 @@ export default function App() {
       setElectronKeyError('请输入 API Key。');
       return;
     }
+    if (!window.mudidiElectron) {
+      setElectronKeyError('桌面安全模块未加载，请关闭程序后重新安装最新安装包，或以管理员身份试一次。');
+      return;
+    }
     try {
-      await window.mudidiElectron!.setApiKey(key);
+      await window.mudidiElectron.setApiKey(key);
       setHasKey(true);
       setPendingApiKey('');
     } catch (e) {
@@ -211,6 +239,11 @@ export default function App() {
             </button>
           ) : isElectronApp ? (
             <div className="space-y-4 text-left">
+              {!window.mudidiElectron ? (
+                <p className="text-amber-400 text-sm leading-relaxed rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2">
+                  未能加载桌面安全模块，无法保存密钥。请向开发者索取重新打包后的安装程序，或暂时关闭/排查安全软件拦截。
+                </p>
+              ) : null}
               <label className="block text-xs text-zinc-500 uppercase tracking-wide">API Key</label>
               <input
                 type="password"

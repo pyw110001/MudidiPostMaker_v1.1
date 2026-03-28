@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "build:electron": "vite build --base ./",
+    "build:electron": "vite build --base ./ --mode electron",
     "preview": "vite preview",
     "electron:start": "electron .",
     "dist:win": "npm run build:electron && electron-builder --win",
@@ -47,6 +47,9 @@
     "directories": {
       "output": "release"
     },
+    "asarUnpack": [
+      "electron/preload.cjs"
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*",

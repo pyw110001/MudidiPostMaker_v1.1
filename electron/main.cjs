@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -23,7 +23,52 @@ function writeStoredApiKey(key) {
   fs.writeFileSync(keyFilePath(), JSON.stringify({ apiKey: trimmed }, null, 0), 'utf8');
 }
 
+function preloadScriptPath() {
+  if (app.isPackaged) {
+    const unpacked = path.join(
+      process.resourcesPath,
+      'app.asar.unpacked',
+      'electron',
+      'preload.cjs'
+    );
+    if (fs.existsSync(unpacked)) {
+      return unpacked;
+    }
+  }
+  return path.join(__dirname, 'preload.cjs');
+}
+
+function setupApplicationMenu(win) {
+  const template = [
+    {
+      label: '应用',
+      submenu: [
+        {
+          label: '重新输入 API Key…',
+          click: () => {
+            try {
+              writeStoredApiKey('');
+            } catch (e) {
+              console.error(e);
+            }
+            if (win && !win.isDestroyed()) {
+              win.reload();
+            }
+          },
+        },
+        { type: 'separator' },
+        {
+          label: '退出',
+          click: () => app.quit(),
+        },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
 function createMainWindow() {
+  const preloadPath = preloadScriptPath();
   const win = new BrowserWindow({
     width: 1280,
     height: 840,
@@ -31,17 +76,20 @@ function createMainWindow() {
     minHeight: 640,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   });
 
   win.once('ready-to-show', () => win.show());
 
+  setupApplicationMenu(win);
+
   const indexHtml = path.join(__dirname, '..', 'dist', 'index.html');
-  win.loadFile(indexHtml);
+  // 查询参数用于渲染进程可靠识别桌面壳（不依赖 UA / preload 是否偶发失败）
+  win.loadFile(indexHtml, { query: { mudidi: 'desktop' } });
 }
 
 app.whenReady().then(() => {
