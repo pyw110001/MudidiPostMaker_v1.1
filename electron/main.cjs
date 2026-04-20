@@ -38,32 +38,57 @@ function preloadScriptPath() {
   return path.join(__dirname, 'preload.cjs');
 }
 
+function clearApiKeyAndReload(win) {
+  try {
+    writeStoredApiKey('');
+  } catch (e) {
+    console.error(e);
+  }
+  if (win && !win.isDestroyed()) {
+    win.reload();
+  }
+}
+
 function setupApplicationMenu(win) {
-  const template = [
-    {
-      label: '应用',
-      submenu: [
+  const isMac = process.platform === 'darwin';
+  const apiKeyItem = {
+    label: '重新输入 API Key…',
+    click: () => clearApiKeyAndReload(win),
+  };
+
+  const template = isMac
+    ? [
         {
-          label: '重新输入 API Key…',
-          click: () => {
-            try {
-              writeStoredApiKey('');
-            } catch (e) {
-              console.error(e);
-            }
-            if (win && !win.isDestroyed()) {
-              win.reload();
-            }
-          },
+          label: app.name,
+          submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            apiKeyItem,
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideOthers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' },
+          ],
         },
-        { type: 'separator' },
+      ]
+    : [
         {
-          label: '退出',
-          click: () => app.quit(),
+          label: '应用',
+          submenu: [
+            apiKeyItem,
+            { type: 'separator' },
+            {
+              label: '退出',
+              click: () => app.quit(),
+            },
+          ],
         },
-      ],
-    },
-  ];
+      ];
+
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 

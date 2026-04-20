@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Preview } from './components/Preview';
 import { generatePoster } from './services/gemini';
-import { motion } from 'motion/react';
 
 export interface HistoryItem {
   id: string;
@@ -278,36 +277,75 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col-reverse lg:flex-row h-[100dvh] w-full bg-[#0a0a0c] text-white font-sans overflow-hidden">
-      <Sidebar 
-        referenceImage={referenceImage}
-        setReferenceImage={setReferenceImage}
-        quantity={quantity}
-        setQuantity={setQuantity}
-        emotion={emotion}
-        setEmotion={setEmotion}
-        season={season}
-        setSeason={setSeason}
-        holiday={holiday}
-        setHoliday={setHoliday}
-        action={action}
-        setAction={setAction}
-        scene={scene}
-        setScene={setScene}
-        ratio={ratio}
-        setRatio={setRatio}
-        promptPreview={promptPreview}
-        onGenerate={handleGenerate}
-        isGenerating={isGenerating}
-      />
-      <Preview 
-        isGenerating={isGenerating}
-        generatedImage={generatedImage}
-        error={error}
-        ratio={ratio}
-        history={history}
-        onSelectHistory={setGeneratedImage}
-      />
+    <div className="h-[100dvh] w-full bg-[var(--bg-deep)] text-[var(--text-1)] overflow-hidden flex flex-col">
+      <header className="h-14 shrink-0 border-b border-[var(--border)] bg-black/35 backdrop-blur-xl px-5 lg:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#f5a623] to-[#e07b0a] shadow-[0_0_16px_rgba(245,166,35,0.35)] flex items-center justify-center text-[13px]">
+            ✦
+          </div>
+          <div>
+            <div className="font-display text-[12px] lg:text-[13px] font-bold tracking-[0.14em] uppercase">
+              Mudidi Poster Architect
+            </div>
+            <div className="text-[10px] tracking-[0.08em] text-[var(--text-3)]">v 1.1</div>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+            历史记录
+          </button>
+          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+            批量生成
+          </button>
+          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border-hi)] text-[var(--gold)] text-xs bg-[var(--gold-dim)]">
+            设置
+          </button>
+        </div>
+      </header>
+
+      <main className="min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-[300px_1fr]">
+        <Sidebar 
+          referenceImage={referenceImage}
+          setReferenceImage={setReferenceImage}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          emotion={emotion}
+          setEmotion={setEmotion}
+          season={season}
+          setSeason={setSeason}
+          holiday={holiday}
+          setHoliday={setHoliday}
+          action={action}
+          setAction={setAction}
+          scene={scene}
+          setScene={setScene}
+          ratio={ratio}
+          setRatio={setRatio}
+          promptPreview={promptPreview}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+        />
+        <Preview 
+          isGenerating={isGenerating}
+          generatedImage={generatedImage}
+          error={error}
+          ratio={ratio}
+          history={history}
+          onSelectHistory={setGeneratedImage}
+          promptPreview={promptPreview}
+          meta={{
+            quantity,
+            emotion,
+            season,
+            holiday,
+            action,
+            scene,
+            ratio,
+            hasReference: referenceImage ? '是' : '否',
+            historyCount: String(history.length)
+          }}
+        />
+      </main>
     </div>
   );
 }
