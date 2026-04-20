@@ -18,6 +18,8 @@ interface PreviewProps {
   ratio: string;
   history: HistoryItem[];
   onSelectHistory: (url: string) => void;
+  onRegenerate: () => void;
+  onGenerateVariant: () => void;
   promptPreview: string;
   meta: Record<string, string>;
 }
@@ -29,6 +31,8 @@ export function Preview({
   ratio,
   history,
   onSelectHistory,
+  onRegenerate,
+  onGenerateVariant,
   promptPreview,
   meta
 }: PreviewProps) {
@@ -233,11 +237,19 @@ export function Preview({
             <div className="relative rounded-[var(--radius-xl)] overflow-hidden border border-white/8 shadow-[0_24px_80px_rgba(0,0,0,0.7)] group">
               <img src={generatedImage} alt="Generated Poster" className="w-full h-full object-contain bg-black/45" />
               <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
-                <button type="button" className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all">
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all"
+                >
                   <RefreshCw className="w-3.5 h-3.5 inline mr-1" />
                   重新生成
                 </button>
-                <button type="button" className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all">
+                <button
+                  type="button"
+                  onClick={onGenerateVariant}
+                  className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all"
+                >
                   <Sparkles className="w-3.5 h-3.5 inline mr-1" />
                   生成变体
                 </button>
