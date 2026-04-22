@@ -45,6 +45,7 @@ export default function App() {
   const [electronKeyError, setElectronKeyError] = useState<string | null>(null);
 
   const [referenceImage, setReferenceImage] = useState<{data: string, mime: string} | null>(null);
+  const [referenceWeight, setReferenceWeight] = useState(0.8);
   const [quantity, setQuantity] = useState('4');
   const [emotion, setEmotion] = useState('无 (None)');
   const [season, setSeason] = useState('夏 (Summer)');
@@ -58,6 +59,13 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [promptPreview, setPromptPreview] = useState('');
+  const [headerHint, setHeaderHint] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!headerHint) return;
+    const timer = setTimeout(() => setHeaderHint(null), 1600);
+    return () => clearTimeout(timer);
+  }, [headerHint]);
 
   useEffect(() => {
     const checkKey = async () => {
@@ -148,11 +156,11 @@ export default function App() {
     const festivity = !holiday.includes('无') ? `Holiday elements: ${holiday}.` : '';
     
     const referenceInstruction = referenceImage 
-      ? "EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design and rigid body proportions: white fluffy perfectly rounded head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. The overall shape and outline of the sheep MUST NOT deform and MUST be identical to the reference. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep." 
+      ? `EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design and rigid body proportions: white fluffy perfectly rounded head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. The overall shape and outline of the sheep MUST NOT deform and MUST be identical to the reference. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep. Reference adherence weight: ${referenceWeight.toFixed(1)}.` 
       : "";
     
     setPromptPreview([baseStyle, characters, charEmotion, setting, activity, time, festivity, referenceInstruction].filter(Boolean).join('\n\n'));
-  }, [quantity, emotion, season, holiday, action, scene, referenceImage]);
+  }, [quantity, emotion, season, holiday, action, scene, referenceImage, referenceWeight]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -291,17 +299,22 @@ export default function App() {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-2">
-          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+          <button type="button" onClick={() => setHeaderHint('历史记录已在右侧底部缩略图区域展示。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
             历史记录
           </button>
-          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+          <button type="button" onClick={() => setHeaderHint('批量生成功能已预留，当前可使用一键导出批量保存。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
             批量生成
           </button>
-          <button type="button" className="h-8 px-4 rounded-full border border-[var(--border-hi)] text-[var(--gold)] text-xs bg-[var(--gold-dim)]">
+          <button type="button" onClick={() => setHeaderHint('设置入口已就绪：请在左侧面板调整参数与输出比例。')} className="h-8 px-4 rounded-full border border-[var(--border-hi)] text-[var(--gold)] text-xs bg-[var(--gold-dim)]">
             设置
           </button>
         </div>
       </header>
+      {headerHint ? (
+        <div className="shrink-0 h-8 px-5 lg:px-6 border-b border-[var(--border)] bg-[var(--gold-dim)] text-[11px] text-[var(--gold-light)] flex items-center">
+          {headerHint}
+        </div>
+      ) : null}
 
       <main className="min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-[300px_1fr]">
         <Sidebar 
@@ -321,6 +334,8 @@ export default function App() {
           setScene={setScene}
           ratio={ratio}
           setRatio={setRatio}
+          referenceWeight={referenceWeight}
+          setReferenceWeight={setReferenceWeight}
           promptPreview={promptPreview}
           onGenerate={handleGenerate}
           isGenerating={isGenerating}
@@ -332,6 +347,8 @@ export default function App() {
           ratio={ratio}
           history={history}
           onSelectHistory={setGeneratedImage}
+          onRegenerate={handleGenerate}
+          onGenerateVariant={handleGenerate}
           promptPreview={promptPreview}
           meta={{
             quantity,

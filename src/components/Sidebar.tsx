@@ -18,6 +18,8 @@ interface SidebarProps {
   setScene: (val: string) => void;
   ratio: string;
   setRatio: (val: string) => void;
+  referenceWeight: number;
+  setReferenceWeight: (val: number) => void;
   promptPreview: string;
   onGenerate: () => void;
   isGenerating: boolean;
@@ -100,6 +102,8 @@ export function Sidebar({
   setScene,
   ratio,
   setRatio,
+  referenceWeight,
+  setReferenceWeight,
   promptPreview,
   onGenerate,
   isGenerating
@@ -140,6 +144,7 @@ export function Sidebar({
   const emotionOptions = ['无 (None)', '开心 😊', '惊喜 😮', '思考 🤔', '调皮 😜', '大哭', '震惊', '比心', '谢谢', '赞'];
   const seasonOptions = ['春 (Spring)', '夏 (Summer)', '秋 (Autumn)', '冬 (Winter)', '无 (None)'];
   const holidayOptions = ['无 (None)', '春节 (Spring Festival)', '中秋 (Mid-Autumn)', '端午', '元旦 (New Year)', '圣诞 (Christmas)'];
+  const nextWeight = referenceWeight >= 1.0 ? 0.6 : Number((referenceWeight + 0.2).toFixed(1));
 
   return (
     <aside className="bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col min-h-0 max-lg:border-r-0 max-lg:border-b">
@@ -212,8 +217,13 @@ export function Sidebar({
             >
               清除
             </button>
-            <button type="button" className="h-8 rounded-[var(--radius-sm)] border border-[var(--border-hi)] bg-[var(--gold-dim)] text-[11px] text-[var(--gold-light)]">
-              权重 0.8
+            <button
+              type="button"
+              onClick={() => setReferenceWeight(nextWeight)}
+              className="h-8 rounded-[var(--radius-sm)] border border-[var(--border-hi)] bg-[var(--gold-dim)] text-[11px] text-[var(--gold-light)]"
+              title="点击循环切换参考图权重（0.6 / 0.8 / 1.0）"
+            >
+              权重 {referenceWeight.toFixed(1)}
             </button>
           </div>
         </Group>
