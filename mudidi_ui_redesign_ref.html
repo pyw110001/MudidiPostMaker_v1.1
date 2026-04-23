@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mudidi Poster Architect — Redesigned</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep:    #0d0d0f;
+  --bg-panel:   #141416;
+  --bg-surface: #1c1c20;
+  --bg-hover:   #242428;
+  --border:     rgba(255,255,255,0.07);
+  --border-hi:  rgba(255,185,80,0.35);
+  --gold:       #f5a623;
+  --gold-light: #ffd280;
+  --gold-dim:   rgba(245,166,35,0.15);
+  --gold-glow:  rgba(245,166,35,0.4);
+  --text-1:     #f0ede8;
+  --text-2:     #9b9892;
+  --text-3:     #5a5855;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-1);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,13,15,0.9);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f5a623 0%, #e07b0a 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 16px rgba(245,166,35,0.35);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+
+.logo-version {
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-btn {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  letter-spacing: 0.02em;
+}
+
+.topbar-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hi);
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+/* ── Main layout ── */
+.main {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Left Panel ── */
+.panel {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-hover) transparent;
+}
+
+.panel-scroll::-webkit-scrollbar { width: 3px; }
+.panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.panel-scroll::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
+
+/* Template presets */
+.presets-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.preset-chip {
+  flex: 1;
+  padding: 7px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-2);
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.preset-chip:hover {
+  border-color: var(--border-hi);
+  color: var(--gold-light);
+  background: var(--gold-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245,166,35,0.15);
+}
+
+.preset-chip:active { transform: translateY(0); }
+
+/* Section groups */
+.param-group {
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.param-group:hover { border-color: rgba(255,255,255,0.1); }
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.group-header:hover { background: var(--bg-hover); }
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.group-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold-glow);
+}
+
+.group-arrow {
+  font-size: 10px;
+  color: var(--text-3);
+  transition: transform 0.3s var(--ease-smooth);
+}
+
+.group-arrow.open { transform: rotate(90deg); }
+
+.group-body {
+  padding: 12px 14px;
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+/* Reference image upload */
+.ref-upload {
+  border: 1.5px dashed rgba(245,166,35,0.2);
+  border-radius: var(--radius-md);
+  background: rgba(245,166,35,0.03);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.ref-upload:hover {
+  border-color: rgba(245,166,35,0.5);
+  background: rgba(245,166,35,0.07);
+}
+
+.ref-upload img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s var(--ease-smooth), filter 0.3s;
+}
+
+.ref-upload:hover img {
+  transform: scale(1.03);
+  filter: brightness(1.1);
+}
+
+.ref-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 8px 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ref-upload:hover .ref-overlay { opacity: 1; }
+
+.ref-action-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(245,166,35,0.9);
+  color: #1a1200;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Noto Sans SC', sans-serif;
+  border: none;
+  transition: all 0.2s;
+}
+
+.ref-action-btn:hover { background: #f5a623; transform: scale(1.05); }
+
+/* Field label */
+.field-label {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+
+/* Custom input */
+.custom-input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-1);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  outline: none;
+  transition: all 0.25s var(--ease-smooth);
+  resize: none;
+}
+
+.custom-input:hover { border-color: rgba(255,255,255,0.12); background: var(--bg-hover); }
+
+.custom-input:focus {
+  border-color: var(--gold);
+  background: var(--bg-hover);
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.12), inset 0 0 12px rgba(245,166,35,0.04);
+}
+
+/* Tag selectors */
+.tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  user-select: none;
+  font-family: 'Noto Sans SC', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.tag::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(245,166,35,0.3), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tag:hover {
+  border-color: rgba(245,166,35,0.4);
+  color: var(--gold-light);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+
+.tag:hover::after { opacity: 1; }
+
+.tag.active {
+  background: linear-gradient(135deg, rgba(245,166,35,0.2), rgba(245,166,35,0.08));
+  border-color: var(--gold);
+  color: var(--gold-light);
+  box-shadow: 0 0 12px rgba(245,166,35,0.2);
+}
+
+.tag:active { transform: scale(0.95); }
+
+/* Quantity stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-weight: 300;
+}
+
+.stepper-btn:hover { background: var(--bg-hover); color: var(--gold); }
+.stepper-btn:active { background: var(--gold-dim); transform: scale(0.9); }
+
+.stepper-val {
+  width: 48px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-1);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  line-height: 36px;
+  user-select: none;
+}
+
+/* Ratio selector */
+.ratio-row {
+  display: flex;
+  gap: 6px;
+}
+
+.ratio-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.22s var(--ease-smooth);
+  color: var(--text-2);
+  font-size: 11px;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.ratio-icon {
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.ratio-btn:hover {
+  border-color: var(--border-hi);
+  color: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.ratio-btn:hover .ratio-icon { opacity: 1; }
+.ratio-btn:active { transform: scale(0.95); }
+
+.ratio-btn.active {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: var(--gold-dim);
+  box-shadow: 0 0 16px rgba(245,166,35,0.2);
+}
+
+/* ── Generate button ── */
+.panel-footer {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.gen-btn {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #f5a623 0%, #e07b0a 50%, #f5a623 100%);
+  background-size: 200% 100%;
+  color: #1a0f00;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s var(--ease-smooth);
+  box-shadow: 0 4px 20px rgba(245,166,35,0.3);
+}
+
+.gen-btn::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: -100%;
+  width: 60%;
+  height: calc(100% + 4px);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: skewX(-15deg);
+  transition: left 0.5s;
+}
+
+.gen-btn:hover {
+  background-position: 100% 0;
+  box-shadow: 0 6px 28px rgba(245,166,35,0.5);
+  transform: translateY(-2px);
+}
+
+.gen-btn:hover::before { left: 160%; }
+
+.gen-btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(245,166,35,0.3);
+}
+
+.gen-btn.loading {
+  pointer-events: none;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.gen-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.gen-icon {
+  font-size: 16px;
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.gen-btn:hover .gen-icon { transform: rotate(20deg) scale(1.2); }
+
+/* ── Preview Area ── */
+.preview-area {
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ambient background glow */
+.preview-area::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(245,166,35,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: rgba(13,13,15,0.6);
+  backdrop-filter: blur(10px);
+}
+
+.preview-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-surface);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.preview-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-3);
+  transition: all 0.2s var(--ease-smooth);
+  font-family: 'Noto Sans SC', sans-serif;
+  user-select: none;
+}
+
+.preview-tab:hover { color: var(--text-2); }
+
+.preview-tab.active {
+  background: var(--bg-hover);
+  color: var(--text-1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.preview-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hi);
+  color: var(--gold);
+  transform: scale(1.08);
+}
+
+.icon-btn:active { transform: scale(0.92); }
+
+/* Main image display */
+.preview-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-frame {
+  position: relative;
+  max-height: 100%;
+  max-width: 100%;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 24px 80px rgba(0,0,0,0.7),
+    0 0 40px rgba(245,166,35,0.08);
+  transition: all 0.5s var(--ease-smooth);
+  cursor: zoom-in;
+}
+
+.image-frame:hover {
+  box-shadow:
+    0 0 0 1px rgba(245,166,35,0.2),
+    0 30px 100px rgba(0,0,0,0.8),
+    0 0 60px rgba(245,166,35,0.15);
+  transform: scale(1.01);
+}
+
+.image-frame img {
+  display: block;
+  max-height: calc(100vh - 220px);
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Hover overlay on image */
+.image-hover-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.image-frame:hover .image-hover-bar { opacity: 1; }
+
+.hover-action {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s var(--ease-smooth);
+  font-family: 'Noto Sans SC', sans-serif;
+  white-space: nowrap;
+}
+
+.hover-action:hover {
+  background: rgba(245,166,35,0.25);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  transform: translateY(-2px);
+}
+
+/* History Strip */
+.history-strip {
+  border-top: 1px solid var(--border);
+  background: rgba(20,20,22,0.8);
+  backdrop-filter: blur(10px);
+  padding: 10px 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  height: 90px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.history-strip::-webkit-scrollbar { display: none; }
+
+.history-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-weight: 500;
+  padding-right: 4px;
+}
+
+.history-items {
+  display: flex;
+  gap: 8px;
+}
+
+.history-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.history-thumb:hover {
+  border-color: rgba(245,166,35,0.5);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.history-thumb.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(245,166,35,0.4);
+}
+
+.history-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+
+.history-thumb:hover img { transform: scale(1.08); }
+
+.history-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 14px;
+}
+
+.history-thumb:hover .history-thumb-overlay { opacity: 1; }
+
+/* ── Progress/Generation overlay ── */
+.gen-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,13,15,0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.gen-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.gen-spinner {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(245,166,35,0.15);
+  border-top-color: var(--gold);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.gen-progress-wrap {
+  width: 200px;
+  text-align: center;
+}
+
+.gen-progress-label {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+.gen-progress-bar {
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.gen-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* Animate in for panel items */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.param-group { animation: fadeUp 0.4s var(--ease-smooth) both; }
+.param-group:nth-child(1) { animation-delay: 0.05s; }
+.param-group:nth-child(2) { animation-delay: 0.10s; }
+.param-group:nth-child(3) { animation-delay: 0.15s; }
+.param-group:nth-child(4) { animation-delay: 0.20s; }
+
+/* Ripple */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(245,166,35,0.2);
+  animation: ripple-out 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple-out {
+  from { transform: scale(0); opacity: 1; }
+  to   { transform: scale(3); opacity: 0; }
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  font-size: 40px;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+/* Tooltip */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a2e;
+  color: var(--text-1);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid var(--border);
+  z-index: 100;
+}
+
+/* Scrollbar for panel */
+.panel-scroll {
+  scrollbar-gutter: stable;
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">✦</div>
+    <div>
+      <div class="logo-text">Mudidi Poster Architect</div>
+      <div class="logo-version">v 1.1</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn">历史记录</button>
+    <button class="topbar-btn">批量生成</button>
+    <button class="topbar-btn" style="border-color:var(--border-hi);color:var(--gold);">设置</button>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Left Panel -->
+  <aside class="panel">
+    <div class="panel-scroll">
+
+      <!-- Quick Presets -->
+      <div class="presets-row">
+        <div class="preset-chip" onclick="applyPreset(this,'summer')">🌞 夏日美食</div>
+        <div class="preset-chip" onclick="applyPreset(this,'festival')">🏮 节日贺卡</div>
+        <div class="preset-chip" onclick="applyPreset(this,'brand')">✦ 品牌海报</div>
+      </div>
+
+      <!-- Group 1: Reference -->
+      <div class="param-group">
+        <div class="group-header" onclick="toggleGroup(this)">
+          <div class="group-title"><span class="group-dot"></span>参考角色</div>
+          <span class="group-arrow open">▶</span>
+        </div>
+        <div class="group-body">
+          <div class="ref-upload" onclick="triggerRefUpload()">
+            <img src="https://images.unsplash.com/photo-1569395089882-9fef60e54e66?w=600&q=80" alt="参考角色">
+            <div class="ref-overlay">
+              <span style="font-size:11px;color:rgba(255,255,255,0.6);">当前参考图</span>
+              <button class="ref-action-btn">更换</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="topbar-btn" style="flex:1;height:32px;font-size:11px;" onclick="showToast('已清除参考图')">清除</button>
+            <button class="topbar-btn" style="flex:1;height:32px;font-size:11px;border-color:var(--border-hi);color:var(--gold);" onclick="showToast('权重已调整')">权重 0.8</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: Character -->
+      <div class="param-group">
+        <div class="group-header" onclick="toggleGroup(this)">
+          <div class="group-title"><span class="group-dot" style="background:#7ec8e3;box-shadow:0 0 6px rgba(126,200,227,0.5);"></span>角色设置</div>
+          <span class="group-arrow open">▶</span>
+        </div>
+        <div class="group-body">
+          <div>
+            <div class="field-label">数量</div>
+            <div class="stepper">
+              <button class="stepper-btn" onclick="changeQty(-1)">−</button>
+              <div class="stepper-val" id="qty-val">7</div>
+              <button class="stepper-btn" onclick="changeQty(1)">+</button>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">表情</div>
+            <div class="tag-grid" id="emotion-tags">
+              <div class="tag active" onclick="selectTag(this,'emotion')">无</div>
+              <div class="tag" onclick="selectTag(this,'emotion')">开心 😊</div>
+              <div class="tag" onclick="selectTag(this,'emotion')">惊喜 😮</div>
+              <div class="tag" onclick="selectTag(this,'emotion')">思考 🤔</div>
+              <div class="tag" onclick="selectTag(this,'emotion')">调皮 😜</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3: Scene -->
+      <div class="param-group">
+        <div class="group-header" onclick="toggleGroup(this)">
+          <div class="group-title"><span class="group-dot" style="background:#8ec98a;box-shadow:0 0 6px rgba(142,201,138,0.5);"></span>场景氛围</div>
+          <span class="group-arrow open">▶</span>
+        </div>
+        <div class="group-body">
+          <div>
+            <div class="field-label">季节</div>
+            <div class="tag-grid" id="season-tags">
+              <div class="tag" onclick="selectTag(this,'season')">春 🌸</div>
+              <div class="tag active" onclick="selectTag(this,'season')">夏 🌿</div>
+              <div class="tag" onclick="selectTag(this,'season')">秋 🍂</div>
+              <div class="tag" onclick="selectTag(this,'season')">冬 ❄️</div>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">节日</div>
+            <div class="tag-grid" id="holiday-tags">
+              <div class="tag active" onclick="selectTag(this,'holiday')">无</div>
+              <div class="tag" onclick="selectTag(this,'holiday')">春节</div>
+              <div class="tag" onclick="selectTag(this,'holiday')">中秋</div>
+              <div class="tag" onclick="selectTag(this,'holiday')">端午</div>
+              <div class="tag" onclick="selectTag(this,'holiday')">元旦</div>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">动作描述</div>
+            <textarea class="custom-input" rows="2" placeholder="描述角色正在做什么...">围坐在绿色圆桌旁吃点心 (eating dim sum at a round table)</textarea>
+          </div>
+          <div>
+            <div class="field-label">场景描述</div>
+            <textarea class="custom-input" rows="2" placeholder="描述场景环境...">装饰着荷花的温馨餐厅 (a warm restaurant with lotus decorations)</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 4: Output -->
+      <div class="param-group">
+        <div class="group-header" onclick="toggleGroup(this)">
+          <div class="group-title"><span class="group-dot" style="background:#c8a3e0;box-shadow:0 0 6px rgba(200,163,224,0.5);"></span>构图输出</div>
+          <span class="group-arrow open">▶</span>
+        </div>
+        <div class="group-body">
+          <div>
+            <div class="field-label">画面比例</div>
+            <div class="ratio-row">
+              <div class="ratio-btn active" onclick="selectRatio(this)">
+                <div class="ratio-icon" style="width:18px;height:24px;"></div>
+                <span>2:3</span>
+              </div>
+              <div class="ratio-btn" onclick="selectRatio(this)">
+                <div class="ratio-icon" style="width:24px;height:24px;"></div>
+                <span>1:1</span>
+              </div>
+              <div class="ratio-btn" onclick="selectRatio(this)">
+                <div class="ratio-icon" style="width:30px;height:20px;"></div>
+                <span>3:2</span>
+              </div>
+              <div class="ratio-btn" onclick="selectRatio(this)">
+                <div class="ratio-icon" style="width:24px;height:30px;"></div>
+                <span>4:5</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="field-label">风格强度</div>
+            <input type="range" min="1" max="10" value="7" style="width:100%;accent-color:var(--gold);" oninput="document.getElementById('style-val').textContent=this.value">
+            <div style="display:flex;justify-content:space-between;margin-top:3px;">
+              <span style="font-size:11px;color:var(--text-3);">写实</span>
+              <span style="font-size:11px;color:var(--gold);" id="style-val">7</span>
+              <span style="font-size:11px;color:var(--text-3);">插画</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Generate Button -->
+    <div class="panel-footer">
+      <button class="gen-btn ripple-container" id="gen-btn" onclick="startGeneration(this)">
+        <span class="gen-btn-inner">
+          <span class="gen-icon">✦</span>
+          <span id="gen-text">立即生成</span>
+        </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Preview Area -->
+  <section class="preview-area">
+
+    <!-- Generation Overlay -->
+    <div class="gen-overlay" id="gen-overlay">
+      <div class="gen-spinner"></div>
+      <div class="gen-progress-wrap">
+        <div class="gen-progress-label" id="gen-label">正在构图中...</div>
+        <div class="gen-progress-bar">
+          <div class="gen-progress-fill" id="gen-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="preview-toolbar">
+      <div class="preview-tabs">
+        <div class="preview-tab active" onclick="switchTab(this)">预览</div>
+        <div class="preview-tab" onclick="switchTab(this)">提示词</div>
+        <div class="preview-tab" onclick="switchTab(this)">元数据</div>
+      </div>
+      <div class="preview-actions">
+        <button class="icon-btn" data-tip="放大" onclick="showToast('已放大')">⤢</button>
+        <button class="icon-btn" data-tip="下载" onclick="showToast('开始下载')">↓</button>
+        <button class="icon-btn" data-tip="复制" onclick="showToast('已复制到剪贴板')">⧉</button>
+        <button class="icon-btn" data-tip="分享" onclick="showToast('生成分享链接中...')">↗</button>
+        <button class="icon-btn" data-tip="一键导出" style="border-color:var(--border-hi);color:var(--gold);" onclick="showToast('正在导出所有图片...')">⊡</button>
+      </div>
+    </div>
+
+    <!-- Main Image -->
+    <div class="preview-main">
+      <div class="image-frame" id="img-frame">
+        <img src="https://images.unsplash.com/photo-1569395089882-9fef60e54e66?w=900&q=80"
+             alt="生成结果"
+             id="main-img"
+             style="height:calc(100vh - 220px);">
+        <div class="image-hover-bar">
+          <button class="hover-action" onclick="showToast('重新生成中...');startGeneration()">↻ 重新生成</button>
+          <button class="hover-action" onclick="showToast('已加入变体队列')">⊞ 生成变体</button>
+          <button class="hover-action" onclick="showToast('高清放大中...')">⤢ 放大高清</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Strip -->
+    <div class="history-strip">
+      <div class="history-label">历史</div>
+      <div class="history-items">
+        <div class="history-thumb active" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1569395089882-9fef60e54e66?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+        <div class="history-thumb" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1612153328212-72dc3f8a5a1b?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+        <div class="history-thumb" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+        <div class="history-thumb" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+        <div class="history-thumb" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+        <div class="history-thumb" onclick="selectHistory(this)">
+          <img src="https://images.unsplash.com/photo-1525755662778-989d0524087e?w=200&q=80" alt="">
+          <div class="history-thumb-overlay">✦</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#222224;border:1px solid var(--border-hi);
+  color:var(--gold-light);font-size:12px;padding:9px 20px;
+  border-radius:20px;z-index:999;opacity:0;transition:all 0.3s var(--ease-spring);
+  pointer-events:none;white-space:nowrap;letter-spacing:0.03em;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5),0 0 12px rgba(245,166,35,0.15);
+  font-family:'Noto Sans SC',sans-serif;
+"></div>
+
+<script>
+let qty = 7;
+let generating = false;
+
+function changeQty(delta) {
+  qty = Math.max(1, Math.min(20, qty + delta));
+  const el = document.getElementById('qty-val');
+  el.textContent = qty;
+  el.style.transform = 'scale(1.3)';
+  el.style.color = 'var(--gold-light)';
+  setTimeout(() => { el.style.transform = ''; el.style.color = ''; }, 200);
+}
+
+function selectTag(el, group) {
+  el.closest('.tag-grid').querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  addRipple(el);
+}
+
+function selectRatio(el) {
+  el.closest('.ratio-row').querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleGroup(header) {
+  const arrow = header.querySelector('.group-arrow');
+  const body  = header.nextElementSibling;
+  const isOpen = arrow.classList.contains('open');
+  if (isOpen) {
+    arrow.classList.remove('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      body.style.maxHeight = '0';
+      body.style.padding = '0 14px';
+      body.style.overflow = 'hidden';
+    });
+  } else {
+    arrow.classList.add('open');
+    body.style.overflow = 'hidden';
+    body.style.maxHeight = body.scrollHeight + 'px';
+    body.style.padding = '12px 14px';
+    setTimeout(() => { body.style.maxHeight = ''; body.style.overflow = ''; }, 300);
+  }
+}
+
+function addRipple(el) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.cssText = `width:${el.offsetWidth}px;height:${el.offsetWidth}px;top:${el.offsetHeight/2 - el.offsetWidth/2}px;left:0;`;
+  el.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+}
+
+function startGeneration(btnEl) {
+  if (generating) return;
+  generating = true;
+  const overlay = document.getElementById('gen-overlay');
+  const fill    = document.getElementById('gen-fill');
+  const label   = document.getElementById('gen-label');
+  const genText = document.getElementById('gen-text');
+  const btn     = document.getElementById('gen-btn');
+
+  btn.classList.add('loading');
+  genText.textContent = '生成中...';
+  overlay.classList.add('visible');
+
+  const stages = ['正在理解参数...','构图布局中...','角色生成中...','场景渲染中...','细节优化中...','最终输出中...'];
+  let progress = 0;
+  let stage = 0;
+
+  const iv = setInterval(() => {
+    progress += Math.random() * 18 + 5;
+    if (progress >= 100) progress = 100;
+    fill.style.width = progress + '%';
+    label.textContent = stages[Math.min(stage++, stages.length - 1)];
+    if (progress >= 100) {
+      clearInterval(iv);
+      setTimeout(() => {
+        overlay.classList.remove('visible');
+        btn.classList.remove('loading');
+        genText.textContent = '立即生成';
+        generating = false;
+        showToast('✦ 生成成功！');
+      }, 400);
+    }
+  }, 320);
+}
+
+function switchTab(el) {
+  el.closest('.preview-tabs').querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectHistory(el) {
+  document.querySelectorAll('.history-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function applyPreset(el, preset) {
+  document.querySelectorAll('.preset-chip').forEach(c => {
+    c.style.borderColor='';c.style.color='';c.style.background='';
+  });
+  el.style.borderColor='var(--gold)';
+  el.style.color='var(--gold-light)';
+  el.style.background='var(--gold-dim)';
+  showToast('已应用预设：' + el.textContent.trim());
+}
+
+function triggerRefUpload() { showToast('请选择参考角色图片'); }
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(8px)';
+  }, 2200);
+}
+
+// Ripple on generate button
+document.getElementById('gen-btn').addEventListener('click', function(e) {
+  const rect = this.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  const size = Math.max(rect.width, rect.height) * 2;
+  r.style.cssText = `width:${size}px;height:${size}px;top:${e.clientY-rect.top-size/2}px;left:${e.clientX-rect.left-size/2}px;background:rgba(255,255,255,0.15);`;
+  this.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+});
+</script>
+</body>
+</html>

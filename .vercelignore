@@ -1,0 +1,14 @@
+node_modules
+release
+dist
+.git
+.cursor
+*.log
+coverage
+build
+.mcps
+agent-transcripts
+# 绝不把本地密钥打进上传包；线上请在 Vercel 项目 Environment Variables 里配置
+.env
+.env.*
+!.env.example

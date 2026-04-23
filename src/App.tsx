@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Preview } from './components/Preview';
 import { generatePoster } from './services/gemini';
-import { motion } from 'motion/react';
 
 export interface HistoryItem {
   id: string;
@@ -19,11 +18,34 @@ declare global {
   }
 }
 
+function hasConfiguredGeminiKey(): boolean {
+  const k = (process.env.API_KEY || process.env.GEMINI_API_KEY || '').trim();
+  return k.length > 0;
+}
+
+function isElectronShell(): boolean {
+  return typeof navigator !== 'undefined' && /\bElectron\b/i.test(navigator.userAgent);
+}
+
+/** 主进程 loadFile 时附加，保证桌面版一定走本地密钥流程（避免被判成「仅浏览器」只显示 .env 说明、没有输入框） */
+function isMudidiDesktopFromMain(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).get('mudidi') === 'desktop';
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
   const [isCheckingKey, setIsCheckingKey] = useState(true);
   const [hasKey, setHasKey] = useState(false);
+  const [isAiStudio, setIsAiStudio] = useState(false);
+  const [isElectronApp, setIsElectronApp] = useState(false);
+  const [pendingApiKey, setPendingApiKey] = useState('');
+  const [electronKeyError, setElectronKeyError] = useState<string | null>(null);
 
   const [referenceImage, setReferenceImage] = useState<{data: string, mime: string} | null>(null);
+  const [referenceWeight, setReferenceWeight] = useState(0.8);
   const [quantity, setQuantity] = useState('4');
   const [emotion, setEmotion] = useState('无 (None)');
   const [season, setSeason] = useState('夏 (Summer)');
@@ -37,23 +59,55 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [promptPreview, setPromptPreview] = useState('');
+  const [headerHint, setHeaderHint] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!headerHint) return;
+    const timer = setTimeout(() => setHeaderHint(null), 1600);
+    return () => clearTimeout(timer);
+  }, [headerHint]);
 
   useEffect(() => {
     const checkKey = async () => {
-      if (window.aistudio) {
-        try {
-          const has = await window.aistudio.hasSelectedApiKey();
-          setHasKey(has);
-        } catch (e) {
-          console.error("Error checking API key:", e);
-          setHasKey(true);
+      try {
+        const isDesktopBundle =
+          isMudidiDesktopFromMain() || isElectronShell() || !!window.mudidiElectron;
+
+        if (isDesktopBundle) {
+          setIsAiStudio(false);
+          setIsElectronApp(true);
+          if (window.mudidiElectron) {
+            try {
+              const k = await window.mudidiElectron.getApiKey();
+              setHasKey(k.trim().length > 0);
+            } catch (e) {
+              console.error("Error reading stored API key:", e);
+              setHasKey(false);
+            }
+          } else {
+            console.error("Mudidi Electron: preload bridge missing (mudidiElectron undefined)");
+            setHasKey(false);
+          }
+        } else if (window.aistudio) {
+          setIsAiStudio(true);
+          setIsElectronApp(false);
+          try {
+            const has = await window.aistudio.hasSelectedApiKey();
+            setHasKey(has);
+          } catch (e) {
+            console.error("Error checking API key:", e);
+            setHasKey(true);
+          }
+        } else {
+          setIsAiStudio(false);
+          setIsElectronApp(false);
+          setHasKey(hasConfiguredGeminiKey());
         }
-      } else {
-        setHasKey(true);
+      } finally {
+        setIsCheckingKey(false);
       }
-      setIsCheckingKey(false);
     };
-    checkKey();
+    void checkKey();
   }, []);
 
   const handleSelectKey = async () => {
@@ -63,10 +117,31 @@ export default function App() {
     }
   };
 
+  const handleSaveElectronApiKey = async () => {
+    setElectronKeyError(null);
+    const key = pendingApiKey.trim();
+    if (!key) {
+      setElectronKeyError('请输入 API Key。');
+      return;
+    }
+    if (!window.mudidiElectron) {
+      setElectronKeyError('桌面安全模块未加载，请关闭程序后重新安装最新安装包，或以管理员身份试一次。');
+      return;
+    }
+    try {
+      await window.mudidiElectron.setApiKey(key);
+      setHasKey(true);
+      setPendingApiKey('');
+    } catch (e) {
+      console.error(e);
+      setElectronKeyError('保存失败，请重试。');
+    }
+  };
+
   // Update prompt preview whenever inputs change
   useEffect(() => {
-    const baseStyle = "A warm, textured, flat-vector illustration style with a grainy, crayon or pastel artistic feel. Warm color palette with soft lighting. Naive art, children's book illustration style. Apple-style clean composition.";
-    const characters = `${quantity} cute anthropomorphic sheep characters. CRITICAL ANATOMY INSTRUCTION: ABSOLUTELY NO HUMAN SKIN/FLESH COLORS. Follow this EXACT color blocking:\n1. Head: White, fluffy, cloud-like with simple dot eyes and a small mouth.\n2. Torso: MUST wear colorful clothes (if swimming, they must wear full-body swimsuits or shirts). NO bare chests, NO bare bellies, NO flesh-colored bodies.\n3. Arms: Extremely thin WHITE stick-like lines ONLY. NO flesh-colored arms.\n4. Legs: Extremely thin BLACK stick-like lines ONLY. NO flesh-colored legs.\nDo not draw realistic animal bodies or thick limbs.`;
+    const baseStyle = "A warm, textured, flat-vector illustration style with a grainy, crayon or pastel artistic feel. Warm color palette with soft lighting. Naive art, children's book illustration style. Apple-style clean composition. CRITICAL: ABSOLUTELY NO TEXT, NO TITLES, NO WORDS, NO LETTERS, AND NO WATERMARKS IN THE GENERATED IMAGE.";
+    const characters = `${quantity} cute anthropomorphic sheep characters. CRITICAL ANATOMY INSTRUCTION: ABSOLUTELY NO HUMAN SKIN/FLESH COLORS. Maintain rigorous consistency in character design; DO NOT deform or mutate the overall shape of the sheep. Follow this EXACT color blocking:\n1. Head: White, fluffy, perfectly consistent cloud-like circle with simple dot eyes and a small mouth.\n2. Torso: MUST wear clothes that STRICTLY MATCH the current Action and Scene (e.g., if swimming, ALL characters MUST wear proper swimwear like swimsuits or rash guards; if winter, winter coats). ALL characters must be dressed appropriately for the context and environment! NO bare chests, NO bare bellies, NO flesh-colored bodies.\n3. Arms: Extremely thin WHITE stick-like lines ONLY. NO flesh-colored arms.\n4. Legs: Extremely thin BLACK stick-like lines ONLY. NO flesh-colored legs.\nDo not draw realistic animal bodies or thick limbs.`;
     
     // Emotion constraints
     const charEmotion = !emotion.includes('无') 
@@ -81,11 +156,11 @@ export default function App() {
     const festivity = !holiday.includes('无') ? `Holiday elements: ${holiday}.` : '';
     
     const referenceInstruction = referenceImage 
-      ? "EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design: white fluffy head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. You MUST keep this exact style. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep." 
+      ? `EXTREMELY IMPORTANT: Look closely at the reference image. You MUST replicate the EXACT character design and rigid body proportions: white fluffy perfectly rounded head, CLOTHED torso, thin WHITE stick arms, and thin BLACK stick legs. The overall shape and outline of the sheep MUST NOT deform and MUST be identical to the reference. ONLY change their specific clothing styles, poses, and actions to match the prompt. DO NOT draw plain white bodies and NEVER use flesh/human skin tones for any part of the sheep. Reference adherence weight: ${referenceWeight.toFixed(1)}.` 
       : "";
     
     setPromptPreview([baseStyle, characters, charEmotion, setting, activity, time, festivity, referenceInstruction].filter(Boolean).join('\n\n'));
-  }, [quantity, emotion, season, holiday, action, scene, referenceImage]);
+  }, [quantity, emotion, season, holiday, action, scene, referenceImage, referenceWeight]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -137,54 +212,157 @@ export default function App() {
           <p className="text-zinc-400 mb-8 text-sm leading-relaxed">
             此应用使用了高质量的 <strong>Gemini 3.1 Flash Image Preview</strong> 模型，需要配置启用了计费的 Google Cloud API Key。
             <br/><br/>
-            请选择您的 API Key 以继续。
+            {isAiStudio ? (
+              <>请选择您的 API Key 以继续。</>
+            ) : isElectronApp ? (
+              <>
+                桌面版首次使用请输入 <strong className="text-zinc-200">Nano Banana 2 / Gemini</strong> 图像生成 API Key（与
+                Google AI Studio / Gemini API 相同）。密钥将保存在本机用户目录，之后打开无需再次输入。
+              </>
+            ) : (
+              <>
+                本地运行：在项目根目录的 <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">.env</code> 文件中设置{" "}
+                <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">GEMINI_API_KEY=你的密钥</code>（可参考仓库里的{" "}
+                <code className="text-zinc-200 bg-white/10 px-1.5 py-0.5 rounded">.env.example</code>
+                ），保存后<strong className="text-zinc-300">重新启动</strong>开发服务器。
+              </>
+            )}
             <br/><br/>
             <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 transition-colors">
               了解有关计费的更多信息 (Learn more about billing)
             </a>
+            {" · "}
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4 transition-colors">
+              获取 API Key (Google AI Studio)
+            </a>
           </p>
-          <button
-            onClick={handleSelectKey}
-            className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
-          >
-            选择 API Key (Select API Key)
-          </button>
+          {isAiStudio ? (
+            <button
+              type="button"
+              onClick={handleSelectKey}
+              className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
+            >
+              选择 API Key (Select API Key)
+            </button>
+          ) : isElectronApp ? (
+            <div className="space-y-4 text-left">
+              {!window.mudidiElectron ? (
+                <p className="text-amber-400 text-sm leading-relaxed rounded-lg bg-amber-500/10 border border-amber-500/25 px-3 py-2">
+                  未能加载桌面安全模块，无法保存密钥。请向开发者索取重新打包后的安装程序，或暂时关闭/排查安全软件拦截。
+                </p>
+              ) : null}
+              <label className="block text-xs text-zinc-500 uppercase tracking-wide">API Key</label>
+              <input
+                type="password"
+                autoComplete="off"
+                value={pendingApiKey}
+                onChange={(e) => setPendingApiKey(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleSaveElectronApiKey();
+                }}
+                placeholder="粘贴 Nano Banana 2 / Gemini API Key"
+                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/15 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+              />
+              {electronKeyError ? (
+                <p className="text-sm text-red-400">{electronKeyError}</p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void handleSaveElectronApiKey()}
+                className="w-full py-4 bg-white text-black rounded-xl font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10"
+              >
+                保存并进入
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-500">
+              配置完成后若本页未更新，请刷新浏览器。
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col-reverse lg:flex-row h-[100dvh] w-full bg-[#0a0a0c] text-white font-sans overflow-hidden">
-      <Sidebar 
-        referenceImage={referenceImage}
-        setReferenceImage={setReferenceImage}
-        quantity={quantity}
-        setQuantity={setQuantity}
-        emotion={emotion}
-        setEmotion={setEmotion}
-        season={season}
-        setSeason={setSeason}
-        holiday={holiday}
-        setHoliday={setHoliday}
-        action={action}
-        setAction={setAction}
-        scene={scene}
-        setScene={setScene}
-        ratio={ratio}
-        setRatio={setRatio}
-        promptPreview={promptPreview}
-        onGenerate={handleGenerate}
-        isGenerating={isGenerating}
-      />
-      <Preview 
-        isGenerating={isGenerating}
-        generatedImage={generatedImage}
-        error={error}
-        ratio={ratio}
-        history={history}
-        onSelectHistory={setGeneratedImage}
-      />
+    <div className="h-[100dvh] w-full bg-[var(--bg-deep)] text-[var(--text-1)] overflow-hidden flex flex-col">
+      <header className="h-14 shrink-0 border-b border-[var(--border)] bg-black/35 backdrop-blur-xl px-5 lg:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#f5a623] to-[#e07b0a] shadow-[0_0_16px_rgba(245,166,35,0.35)] flex items-center justify-center text-[13px]">
+            ✦
+          </div>
+          <div>
+            <div className="font-display text-[12px] lg:text-[13px] font-bold tracking-[0.14em] uppercase">
+              Mudidi Poster Architect
+            </div>
+            <div className="text-[10px] tracking-[0.08em] text-[var(--text-3)]">v 1.1</div>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <button type="button" onClick={() => setHeaderHint('历史记录已在右侧底部缩略图区域展示。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+            历史记录
+          </button>
+          <button type="button" onClick={() => setHeaderHint('批量生成功能已预留，当前可使用一键导出批量保存。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
+            批量生成
+          </button>
+          <button type="button" onClick={() => setHeaderHint('设置入口已就绪：请在左侧面板调整参数与输出比例。')} className="h-8 px-4 rounded-full border border-[var(--border-hi)] text-[var(--gold)] text-xs bg-[var(--gold-dim)]">
+            设置
+          </button>
+        </div>
+      </header>
+      {headerHint ? (
+        <div className="shrink-0 h-8 px-5 lg:px-6 border-b border-[var(--border)] bg-[var(--gold-dim)] text-[11px] text-[var(--gold-light)] flex items-center">
+          {headerHint}
+        </div>
+      ) : null}
+
+      <main className="min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-[300px_1fr]">
+        <Sidebar 
+          referenceImage={referenceImage}
+          setReferenceImage={setReferenceImage}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          emotion={emotion}
+          setEmotion={setEmotion}
+          season={season}
+          setSeason={setSeason}
+          holiday={holiday}
+          setHoliday={setHoliday}
+          action={action}
+          setAction={setAction}
+          scene={scene}
+          setScene={setScene}
+          ratio={ratio}
+          setRatio={setRatio}
+          referenceWeight={referenceWeight}
+          setReferenceWeight={setReferenceWeight}
+          promptPreview={promptPreview}
+          onGenerate={handleGenerate}
+          isGenerating={isGenerating}
+        />
+        <Preview 
+          isGenerating={isGenerating}
+          generatedImage={generatedImage}
+          error={error}
+          ratio={ratio}
+          history={history}
+          onSelectHistory={setGeneratedImage}
+          onRegenerate={handleGenerate}
+          onGenerateVariant={handleGenerate}
+          promptPreview={promptPreview}
+          meta={{
+            quantity,
+            emotion,
+            season,
+            holiday,
+            action,
+            scene,
+            ratio,
+            hasReference: referenceImage ? '是' : '否',
+            historyCount: String(history.length)
+          }}
+        />
+      </main>
     </div>
   );
 }

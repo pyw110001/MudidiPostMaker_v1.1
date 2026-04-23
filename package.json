@@ -1,12 +1,19 @@
 {
-  "name": "react-example",
+  "name": "mudidi-poster-maker",
   "private": true,
-  "version": "0.0.0",
+  "author": "Mudidi",
+  "description": "Mudidi 风格海报生成（Gemini 图像）",
+  "version": "1.1.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:electron": "vite build --base ./ --mode electron",
     "preview": "vite preview",
+    "electron:start": "electron .",
+    "dist:win": "npm run build:electron && electron-builder --win",
+    "dist:mac": "npm run build:electron && electron-builder --mac",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
@@ -30,6 +37,60 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.mudidi.poster-maker",
+    "productName": "Mudidi Poster Maker",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "asarUnpack": [
+      "electron/preload.cjs"
+    ],
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-Windows-${arch}-Setup.${ext}"
+    },
+    "mac": {
+      "category": "public.app-category.graphics-design",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
