@@ -59,13 +59,6 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [promptPreview, setPromptPreview] = useState('');
-  const [headerHint, setHeaderHint] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!headerHint) return;
-    const timer = setTimeout(() => setHeaderHint(null), 1600);
-    return () => clearTimeout(timer);
-  }, [headerHint]);
 
   useEffect(() => {
     const checkKey = async () => {
@@ -285,38 +278,28 @@ export default function App() {
   }
 
   return (
-    <div className="h-[100dvh] w-full bg-[var(--bg-deep)] text-[var(--text-1)] overflow-hidden flex flex-col">
-      <header className="h-14 shrink-0 border-b border-[var(--border)] bg-black/35 backdrop-blur-xl px-5 lg:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#f5a623] to-[#e07b0a] shadow-[0_0_16px_rgba(245,166,35,0.35)] flex items-center justify-center text-[13px]">
-            ✦
-          </div>
+    <div className="h-[100dvh] w-full bg-[var(--paper)] text-[var(--ink)] overflow-hidden flex flex-col">
+      <header className="h-[52px] shrink-0 border-b-[3px] border-[var(--ink)] bg-[var(--paper)] px-0 flex items-stretch justify-between">
+        <div className="flex items-center border-r-[3px] border-[var(--ink)] px-5">
+          <div className="w-8 h-8 bg-[var(--ink)] text-[var(--paper)] flex items-center justify-center font-display text-lg mr-3">M</div>
           <div>
-            <div className="font-display text-[12px] lg:text-[13px] font-bold tracking-[0.14em] uppercase">
-              Mudidi Poster Architect
-            </div>
-            <div className="text-[10px] tracking-[0.08em] text-[var(--text-3)]">v 1.1</div>
+            <div className="font-display text-[22px] leading-none">MUDIDI</div>
+            <div className="text-[9px] tracking-[0.14em] text-neutral-500">POSTER ARCHITECT / V.1.1</div>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-2">
-          <button type="button" onClick={() => setHeaderHint('历史记录已在右侧底部缩略图区域展示。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
-            历史记录
-          </button>
-          <button type="button" onClick={() => setHeaderHint('批量生成功能已预留，当前可使用一键导出批量保存。')} className="h-8 px-4 rounded-full border border-[var(--border)] bg-transparent text-[var(--text-2)] text-xs transition-all hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)]">
-            批量生成
-          </button>
-          <button type="button" onClick={() => setHeaderHint('设置入口已就绪：请在左侧面板调整参数与输出比例。')} className="h-8 px-4 rounded-full border border-[var(--border-hi)] text-[var(--gold)] text-xs bg-[var(--gold-dim)]">
-            设置
-          </button>
+        <div className="flex-1 hidden md:flex items-stretch px-4">
+          <button type="button" className="px-4 text-[10px] tracking-[0.12em] text-neutral-500 uppercase border-r border-[var(--lgray)] hover:bg-[var(--ink)] hover:text-[var(--paper)]">构图</button>
+          <button type="button" className="px-4 text-[10px] tracking-[0.12em] text-neutral-500 uppercase border-r border-[var(--lgray)] hover:bg-[var(--ink)] hover:text-[var(--paper)]">批量</button>
+          <button type="button" className="px-4 text-[10px] tracking-[0.12em] text-neutral-500 uppercase border-r border-[var(--lgray)] hover:bg-[var(--ink)] hover:text-[var(--paper)]">历史</button>
+          <button type="button" className="px-4 text-[10px] tracking-[0.12em] text-neutral-500 uppercase hover:bg-[var(--ink)] hover:text-[var(--paper)]">导出</button>
+        </div>
+        <div className="flex items-center border-l-[3px] border-[var(--ink)] px-5 text-[9px] tracking-[0.1em] text-neutral-500 gap-2">
+          <span className="w-2 h-2 bg-emerald-500 outline outline-2 outline-[var(--ink)] outline-offset-1" />
+          <span>SYS ONLINE</span>
         </div>
       </header>
-      {headerHint ? (
-        <div className="shrink-0 h-8 px-5 lg:px-6 border-b border-[var(--border)] bg-[var(--gold-dim)] text-[11px] text-[var(--gold-light)] flex items-center">
-          {headerHint}
-        </div>
-      ) : null}
 
-      <main className="min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-[300px_1fr]">
+      <main className="min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-[286px_1fr]">
         <Sidebar 
           referenceImage={referenceImage}
           setReferenceImage={setReferenceImage}

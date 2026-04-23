@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Copy,
   Download,
@@ -51,8 +51,10 @@ export function Preview({
     return () => clearInterval(timer);
   }, [isGenerating]);
 
-  const [w, h] = ratio.split(':').map(Number);
-  const aspectRatio = Number.isFinite(w / h) ? w / h : 3 / 4;
+  const aspectRatio = useMemo(() => {
+    const [w, h] = ratio.split(':').map(Number);
+    return Number.isFinite(w / h) ? w / h : 3 / 4;
+  }, [ratio]);
 
   useEffect(() => {
     if (!actionHint) return;
@@ -140,38 +142,36 @@ export function Preview({
   };
 
   return (
-    <section className="bg-[var(--bg-deep)] flex flex-col min-h-0 relative overflow-hidden">
-      <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-[radial-gradient(circle,rgba(245,166,35,0.06)_0%,transparent_72%)] pointer-events-none" />
-
-      <div className="h-12 shrink-0 border-b border-[var(--border)] bg-black/30 backdrop-blur-lg px-4 flex items-center justify-between">
-        <div className="flex items-center gap-1 p-1 rounded-[var(--radius-sm)] bg-[var(--bg-surface)]">
+    <section className="bg-[var(--paper)] flex flex-col min-h-0 relative overflow-hidden">
+      <div className="h-12 shrink-0 border-b-[3px] border-[var(--ink)] bg-[var(--paper)] px-0 flex items-center justify-between">
+        <div className="flex items-stretch h-full">
           <button
             type="button"
             onClick={() => setActiveTab('preview')}
-            className={`h-7 px-3 rounded-md text-xs transition-all ${activeTab === 'preview' ? 'bg-[var(--bg-hover)] text-[var(--text-1)]' : 'text-[var(--text-3)] hover:text-[var(--text-2)]'}`}
+            className={`px-5 text-[10px] uppercase tracking-[0.12em] border-r-2 border-[var(--ink)] ${activeTab === 'preview' ? 'bg-[var(--ink)] text-[var(--paper)]' : 'text-neutral-500 hover:bg-[var(--lgray)]'}`}
           >
             预览
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('prompt')}
-            className={`h-7 px-3 rounded-md text-xs transition-all ${activeTab === 'prompt' ? 'bg-[var(--bg-hover)] text-[var(--text-1)]' : 'text-[var(--text-3)] hover:text-[var(--text-2)]'}`}
+            className={`px-5 text-[10px] uppercase tracking-[0.12em] border-r-2 border-[var(--ink)] ${activeTab === 'prompt' ? 'bg-[var(--ink)] text-[var(--paper)]' : 'text-neutral-500 hover:bg-[var(--lgray)]'}`}
           >
             提示词
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('meta')}
-            className={`h-7 px-3 rounded-md text-xs transition-all ${activeTab === 'meta' ? 'bg-[var(--bg-hover)] text-[var(--text-1)]' : 'text-[var(--text-3)] hover:text-[var(--text-2)]'}`}
+            className={`px-5 text-[10px] uppercase tracking-[0.12em] border-r-2 border-[var(--ink)] ${activeTab === 'meta' ? 'bg-[var(--ink)] text-[var(--paper)]' : 'text-neutral-500 hover:bg-[var(--lgray)]'}`}
           >
             元数据
           </button>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-stretch h-full border-l-[3px] border-[var(--ink)]">
           <button
             type="button"
             onClick={handleOpenImage}
-            className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border)] flex items-center justify-center text-[var(--text-3)] hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)] transition-all"
+            className="w-12 flex items-center justify-center border-r-2 border-[var(--ink)] text-neutral-500 hover:bg-[var(--ink)] hover:text-[var(--paper)]"
             title="放大"
           >
             <Expand className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ export function Preview({
           <button
             type="button"
             onClick={handleDownloadCurrent}
-            className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border)] flex items-center justify-center text-[var(--text-3)] hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)] transition-all"
+            className="w-12 flex items-center justify-center border-r-2 border-[var(--ink)] text-neutral-500 hover:bg-[var(--ink)] hover:text-[var(--paper)]"
             title="下载"
           >
             <Download className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export function Preview({
           <button
             type="button"
             onClick={() => void handleCopy()}
-            className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border)] flex items-center justify-center text-[var(--text-3)] hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)] transition-all"
+            className="w-12 flex items-center justify-center border-r-2 border-[var(--ink)] text-neutral-500 hover:bg-[var(--ink)] hover:text-[var(--paper)]"
             title="复制"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export function Preview({
           <button
             type="button"
             onClick={() => void handleShare()}
-            className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border)] flex items-center justify-center text-[var(--text-3)] hover:text-[var(--gold)] hover:border-[var(--border-hi)] hover:bg-[var(--bg-hover)] transition-all"
+            className="w-12 flex items-center justify-center border-r-2 border-[var(--ink)] text-neutral-500 hover:bg-[var(--ink)] hover:text-[var(--paper)]"
             title="分享"
           >
             <Share2 className="w-3.5 h-3.5" />
@@ -204,69 +204,66 @@ export function Preview({
             type="button"
             onClick={handleBatchExport}
             disabled={history.length === 0}
-            className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border-hi)] flex items-center justify-center text-[var(--gold)] bg-[var(--gold-dim)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-12 flex items-center justify-center text-[var(--red)] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--ink)] hover:text-[var(--paper)]"
           >
             <Download className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-      {actionHint ? <div className="px-4 py-1 text-[11px] text-[var(--gold-light)]">{actionHint}</div> : null}
+      {actionHint ? <div className="px-4 py-1 text-[10px] uppercase tracking-[0.12em] text-[var(--red)] border-b-2 border-[var(--ink)]">{actionHint}</div> : null}
 
-      <div className="flex-1 min-h-0 p-4 lg:p-6 flex items-center justify-center relative">
+      <div className="flex-1 min-h-0 p-4 lg:p-8 flex items-center justify-center relative bg-[linear-gradient(0deg,transparent,transparent_29px,var(--lgray)_29px,var(--lgray)_30px),linear-gradient(90deg,transparent,transparent_29px,var(--lgray)_29px,var(--lgray)_30px)]">
         {activeTab === 'prompt' ? (
-          <div className="w-full h-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-black/25 p-4 overflow-y-auto custom-scrollbar">
-            <pre className="text-[12px] leading-relaxed text-[var(--text-2)] whitespace-pre-wrap font-mono">{promptPreview || '暂无提示词'}</pre>
+          <div className="w-full h-full border-[3px] border-[var(--ink)] bg-[var(--paper)] p-4 overflow-y-auto custom-scrollbar">
+            <pre className="text-[11px] leading-relaxed whitespace-pre-wrap font-mono">{promptPreview || '暂无提示词'}</pre>
           </div>
         ) : activeTab === 'meta' ? (
-          <div className="w-full h-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-black/25 p-4 overflow-y-auto custom-scrollbar">
+          <div className="w-full h-full border-[3px] border-[var(--ink)] bg-[var(--paper)] p-4 overflow-y-auto custom-scrollbar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {Object.entries(meta).map(([key, value]) => (
-                <div key={key} className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2">
-                  <div className="text-[11px] text-[var(--text-3)]">{key}</div>
-                  <div className="text-[12px] text-[var(--text-1)] break-words">{value}</div>
+                <div key={key} className="border-2 border-[var(--ink)] bg-[var(--paper)] px-3 py-2">
+                  <div className="text-[9px] uppercase tracking-[0.08em] text-neutral-500">{key}</div>
+                  <div className="text-[11px] break-words">{value}</div>
                 </div>
               ))}
             </div>
           </div>
         ) : error ? (
-          <div className="rounded-[var(--radius-lg)] border border-red-500/30 bg-red-950/20 px-6 py-4 text-red-300 text-sm">
+          <div className="border-[3px] border-[var(--red)] bg-[var(--paper)] px-6 py-4 text-[var(--red)] text-sm">
             {error}
           </div>
         ) : generatedImage ? (
           <div className="relative max-h-full max-w-full" style={{ aspectRatio }}>
-            <div className="relative rounded-[var(--radius-xl)] overflow-hidden border border-white/8 shadow-[0_24px_80px_rgba(0,0,0,0.7)] group">
-              <img src={generatedImage} alt="Generated Poster" className="w-full h-full object-contain bg-black/45" />
-              <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-2">
+            <div className="relative overflow-hidden border-[3px] border-[var(--ink)] shadow-[8px_8px_0_var(--ink)] group bg-[var(--paper)]">
+              <img src={generatedImage} alt="Generated Poster" className="w-full h-full object-contain" />
+              <div className="absolute inset-x-0 bottom-0 bg-[var(--paper)] border-t-2 border-[var(--ink)] opacity-0 group-hover:opacity-100 transition-opacity flex">
                 <button
                   type="button"
                   onClick={onRegenerate}
-                  className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all"
+                  className="flex-1 py-2 text-[9px] tracking-[0.1em] uppercase border-r-2 border-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 inline mr-1" />
                   重新生成
                 </button>
                 <button
                   type="button"
                   onClick={onGenerateVariant}
-                  className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all"
+                  className="flex-1 py-2 text-[9px] tracking-[0.1em] uppercase border-r-2 border-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]"
                 >
-                  <Sparkles className="w-3.5 h-3.5 inline mr-1" />
                   生成变体
                 </button>
                 <a
                   href={generatedImage}
                   download={`poster-${Date.now()}.png`}
-                  className="h-8 px-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-xs text-white hover:border-[var(--gold)] hover:text-[var(--gold-light)] transition-all inline-flex items-center"
+                  className="flex-1 py-2 text-center text-[9px] tracking-[0.1em] uppercase hover:bg-[var(--ink)] hover:text-[var(--paper)]"
                 >
-                  <Maximize2 className="w-3.5 h-3.5 mr-1" />
                   放大高清
                 </a>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 text-[var(--text-3)]">
-            <div className="w-20 h-20 rounded-2xl border border-dashed border-white/12 bg-black/20 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-neutral-500">
+            <div className="w-20 h-20 border-2 border-[var(--ink)] bg-[var(--paper)] flex items-center justify-center">
               <ImageIcon className="w-8 h-8 opacity-60" />
             </div>
             <p className="text-sm">等待生成 (Ready to create)</p>
@@ -274,29 +271,29 @@ export function Preview({
         )}
 
         {isGenerating ? (
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-5">
-            <div className="w-14 h-14 rounded-full border-2 border-[rgba(245,166,35,0.15)] border-t-[var(--gold)] animate-spin" />
+          <div className="absolute inset-0 bg-[var(--paper)]/90 z-20 flex flex-col items-center justify-center gap-5">
+            <div className="w-14 h-14 rounded-full border-2 border-[var(--lgray)] border-t-[var(--ink)] animate-spin" />
             <div className="w-56">
-              <p className="text-xs text-[var(--text-2)] mb-2 tracking-[0.04em] text-center">正在构图中...</p>
-              <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                <div className="h-full bg-[linear-gradient(90deg,var(--gold),var(--gold-light))] shadow-[0_0_8px_var(--gold-glow)] transition-all" style={{ width: `${progress}%` }} />
+              <p className="text-xs mb-2 tracking-[0.1em] text-center">正在构图中...</p>
+              <div className="h-2 border-2 border-[var(--ink)] overflow-hidden">
+                <div className="h-full bg-[var(--ink)] transition-all" style={{ width: `${progress}%` }} />
               </div>
             </div>
           </div>
         ) : null}
       </div>
 
-      <div className="h-24 shrink-0 border-t border-[var(--border)] bg-black/30 backdrop-blur-lg px-4 py-3 flex items-center gap-3 overflow-x-auto custom-scrollbar">
+      <div className="h-24 shrink-0 border-t-[3px] border-[var(--ink)] bg-[var(--paper)] px-0 py-0 flex items-stretch gap-0 overflow-x-auto custom-scrollbar">
         <button
           type="button"
           onClick={handleBatchExport}
           disabled={history.length === 0}
-          className="h-full px-3 rounded-[var(--radius-sm)] border border-[var(--border-hi)] bg-[var(--gold-dim)] text-[var(--gold-light)] text-[11px] whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+          className="h-full px-3 border-r-2 border-[var(--ink)] text-[10px] uppercase tracking-[0.1em] whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--ink)] hover:text-[var(--paper)]"
         >
           一键导出 ({history.length})
         </button>
         {history.length === 0 ? (
-          <div className="h-full flex-1 min-w-[180px] rounded-[var(--radius-sm)] border border-dashed border-white/10 flex items-center justify-center text-[11px] text-[var(--text-3)]">
+          <div className="h-full flex-1 min-w-[180px] flex items-center justify-center text-[11px] text-neutral-500">
             暂无历史记录
           </div>
         ) : (
@@ -305,10 +302,10 @@ export function Preview({
               key={item.id}
               type="button"
               onClick={() => onSelectHistory(item.url)}
-              className={`h-full aspect-square rounded-[var(--radius-sm)] overflow-hidden border transition-all shrink-0 ${
+              className={`h-full w-[76px] overflow-hidden border-r-2 border-[var(--ink)] transition-all shrink-0 ${
                 generatedImage === item.url
-                  ? 'border-[var(--gold)] shadow-[0_0_14px_rgba(245,166,35,0.35)]'
-                  : 'border-transparent hover:border-[var(--border-hi)]'
+                  ? 'outline outline-4 outline-[var(--red)] outline-offset-[-4px]'
+                  : 'hover:brightness-110'
               }`}
             >
               <img src={item.url} alt="History" className="w-full h-full object-cover" />

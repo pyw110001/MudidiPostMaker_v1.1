@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -7,43 +7,27 @@
 }
 
 :root {
-  --bg-deep: #0d0d0f;
-  --bg-panel: #141416;
-  --bg-surface: #1c1c20;
-  --bg-hover: #242428;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-hi: rgba(255, 185, 80, 0.35);
-  --gold: #f5a623;
-  --gold-light: #ffd280;
-  --gold-dim: rgba(245, 166, 35, 0.15);
-  --gold-glow: rgba(245, 166, 35, 0.4);
-  --text-1: #f0ede8;
-  --text-2: #9b9892;
-  --text-3: #5a5855;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ink: #0d0d0d;
+  --paper: #f0ece3;
+  --gray: #c8c4bb;
+  --lgray: #e4e0d7;
+  --red: #ff2200;
+  --bw: 3px solid #0d0d0d;
+  --bwt: 2px solid #0d0d0d;
+}
+
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-deep);
-  color: var(--text-1);
-  font-family: var(--font-sans);
-  font-weight: 300;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.02;
-  pointer-events: none;
-  z-index: -1;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: "Space Mono", var(--font-sans);
+  cursor: crosshair;
 }
 
 button,
@@ -54,7 +38,8 @@ select {
 }
 
 .font-display {
-  font-family: "Syne", var(--font-sans);
+  font-family: "Bebas Neue", var(--font-sans);
+  letter-spacing: 0.08em;
 }
 
 /* Custom Scrollbar for Sidebar */
@@ -68,15 +53,14 @@ select {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--bg-hover);
-  border-radius: 10px;
+  background: var(--ink);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #2e2e33;
+  background: var(--red);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--bg-hover) transparent;
+  scrollbar-color: var(--ink) var(--lgray);
 }
